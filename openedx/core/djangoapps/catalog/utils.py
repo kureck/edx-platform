@@ -209,7 +209,7 @@ def get_run_marketing_urls(user, course_keys=None):
     return course_marketing_urls
 
 
-class CatalogCourseRunCacheUtility:
+class CatalogCourseRunCacheUtility(object):
     """
     Non-instantiatable Class that contains all utility methods for Catalog
     Course Run Cache.
