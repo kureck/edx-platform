@@ -51,7 +51,15 @@ site_status_msg = get_site_status_msg(course_id)
     <h1 class="logo">
       <a href="${marketing_link('ROOT')}">
         <%block name="navigation_logo">
-            <img src="${branding_api.get_logo_url(is_secure)}" alt="${_("{platform_name} Home Page").format(platform_name=static.get_platform_name())}"/>
+        <%
+        logo_url = None
+        if data and data.get('third_party_auth_hint', None):
+            logo_url = branding_api.get_enterprise_customer_logo_url(data['third_party_auth_hint'])
+
+        if logo_url is None:
+            logo_url = branding_api.get_logo_url(is_secure)
+        %>
+            <img src="${logo_url}" alt="${_("{platform_name} Home Page").format(platform_name=static.get_platform_name())}"/>
         </%block>
       </a>
     </h1>
