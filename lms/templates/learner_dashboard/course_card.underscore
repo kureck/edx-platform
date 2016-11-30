@@ -25,10 +25,12 @@
                 <% } %>
             </h3>
             <div class="course-text">
+
                 <% if (start_date && end_date) { %>
                     <span class="run-period"><%- start_date %> - <%- end_date %></span>
                     -
                 <% } %>
+
                 <span class="course-key"><%- key %></span>
             </div>
         </div>

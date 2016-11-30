@@ -31,12 +31,16 @@
             },
 
             renderItems: function() {
+                /* eslint no-param-reassign: [2, { "props": true }] */
                 var latest = this.model.latest();
                 var items = latest.map(function(result) {
+                    result.userLanguage = this.model.userLanguage;
+                    result.userTimezone = this.model.userTimezone;
                     var item = new CourseCardView({model: result});
                     return item.render().el;
                 }, this);
                 this.$list.append(items);
+                /* eslint no-param-reassign: [2, { "props": false }] */
             },
 
             attachScrollHandler: function() {

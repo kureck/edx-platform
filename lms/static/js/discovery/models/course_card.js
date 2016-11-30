@@ -16,7 +16,9 @@
                 start: '',
                 image_url: '',
                 org: '',
-                id: ''
+                id: '',
+                user_language: '',
+                user_timezone: ''
             }
         });
     });

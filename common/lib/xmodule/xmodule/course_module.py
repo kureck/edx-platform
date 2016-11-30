@@ -197,10 +197,11 @@ class CourseFields(object):
         scope=Scope.settings,
     )
     advertised_start = String(
-        display_name=_("Course Advertised Start Date"),
+        display_name=_("Course Advertised Start"),
         help=_(
-            "Enter the date you want to advertise as the course start date, if this date is different from the set "
-            "start date. To advertise the set start date, enter null."
+            # pylint: disable=C0301
+            "Enter a date or string (\'Fall 2025\' or \'Later this year\') as the advertised starting time frame for the course, if this is different from the start date you have set. "
+            "To use the start date that you have set, enter null for the value."
         ),
         scope=Scope.settings
     )
@@ -1211,21 +1212,6 @@ class CourseDescriptor(CourseFields, SequenceDescriptor, LicenseMixin):
         """Return the course_id for this course"""
         return self.location.course_key
 
-    def start_datetime_text(self, format_string="SHORT_DATE", time_zone=utc):
-        """
-        Returns the desired text corresponding the course's start date and time in specified time zone, defaulted
-        to UTC. Prefers .advertised_start, then falls back to .start
-        """
-        i18n = self.runtime.service(self, "i18n")
-        return course_metadata_utils.course_start_datetime_text(
-            self.start,
-            self.advertised_start,
-            format_string,
-            time_zone,
-            i18n.ugettext,
-            i18n.strftime
-        )
-
     @property
     def start_date_is_still_default(self):
         """
@@ -1235,17 +1221,6 @@ class CourseDescriptor(CourseFields, SequenceDescriptor, LicenseMixin):
         return course_metadata_utils.course_start_date_is_default(
             self.start,
             self.advertised_start
-        )
-
-    def end_datetime_text(self, format_string="SHORT_DATE", time_zone=utc):
-        """
-        Returns the end date or date_time for the course formatted as a string.
-        """
-        return course_metadata_utils.course_end_datetime_text(
-            self.end,
-            format_string,
-            time_zone,
-            self.runtime.service(self, "i18n").strftime
         )
 
     def get_discussion_blackout_datetimes(self):
