@@ -161,7 +161,7 @@
                     mousewheel: this.onMovement,
                     DOMMouseScroll: this.onMovement
                 })
-                .on(events, 'li[data-index]', this.onCaptionHandler);
+                .on(events, 'span[data-index]', this.onCaptionHandler);
                 this.container.on({
                     mouseenter: this.onContainerMouseEnter,
                     mouseleave: this.onContainerMouseLeave
@@ -739,16 +739,16 @@
             */
             buildCaptions: function(container, start, captions) {
                 var process = function(text, index) {
-                    var liEl = $('<li>', {
+                    var spanEl = $('<span>', {
                         'role': 'link',
                         'data-index': index,
                         'data-start': start[index],
                         'tabindex': 0
                     });
 
-                    HtmlUtils.setHtml($(liEl), HtmlUtils.HTML(text.toString()));
+                    HtmlUtils.setHtml($(spanEl), HtmlUtils.HTML(text.toString()));
 
-                    return liEl[0];
+                    return spanEl.wrap('<li>').parent()[0];
                 };
 
                 return AsyncProcess.array(captions, process).done(function(list) {
