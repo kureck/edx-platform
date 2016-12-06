@@ -72,6 +72,9 @@ def login_and_registration_form(request, initial_mode="login"):
     if request.user.is_authenticated():
         return redirect(redirect_to)
 
+    if 'ec_src' not in request.session and request.GET.get('ec_src', None):
+        request.session['ec_src'] = request.GET.get('ec_src', None)
+
     # Retrieve the form descriptions from the user API
     form_descriptions = _get_form_descriptions(request)
 
@@ -111,6 +114,7 @@ def login_and_registration_form(request, initial_mode="login"):
             'initial_mode': initial_mode,
             'third_party_auth': _third_party_auth_context(request, redirect_to),
             'third_party_auth_hint': third_party_auth_hint or '',
+            'ec_src': request.session.get('ec_src', None),
             'platform_name': configuration_helpers.get_value('PLATFORM_NAME', settings.PLATFORM_NAME),
             'support_link': configuration_helpers.get_value('SUPPORT_SITE_LINK', settings.SUPPORT_SITE_LINK),
 

@@ -372,14 +372,14 @@ def get_base_url(is_secure):
     return _absolute_url(is_secure=is_secure, url_path="")
 
 
-def get_enterprise_customer_logo_url(provider_id=None):
+def get_enterprise_customer_logo_url(**kwargs):
     """
     Return the url for the enterprise customer branding logo image
 
     Arguments:
         provider_id: There is 1:1 relation between Enterprise customer and SAML identity provider.
     """
-    branding_info = get_enterprise_branding_info(provider_id=provider_id)
+    branding_info = get_enterprise_branding_info(**kwargs)
     if branding_info:
         return branding_info.logo.url
     return None

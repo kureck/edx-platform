@@ -444,6 +444,7 @@ def signin_user(request):
         # pipeline, if any.
         'pipeline_running': 'true' if pipeline.running(request) else 'false',
         'pipeline_url': auth_pipeline_urls(pipeline.AUTH_ENTRY_LOGIN, redirect_url=redirect_to),
+        'ec_src': request.session.get('ec_src', None),
         'platform_name': configuration_helpers.get_value(
             'platform_name',
             settings.PLATFORM_NAME
@@ -472,6 +473,7 @@ def register_user(request, extra_context=None):
         'name': '',
         'running_pipeline': None,
         'pipeline_urls': auth_pipeline_urls(pipeline.AUTH_ENTRY_REGISTER, redirect_url=redirect_to),
+        'ec_src': request.session.get('ec_src', None),
         'platform_name': configuration_helpers.get_value(
             'platform_name',
             settings.PLATFORM_NAME
