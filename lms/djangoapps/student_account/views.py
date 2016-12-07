@@ -72,8 +72,8 @@ def login_and_registration_form(request, initial_mode="login"):
     if request.user.is_authenticated():
         return redirect(redirect_to)
 
-    if 'ec_src' not in request.session and request.GET.get('ec_src', None):
-        request.session['ec_src'] = request.GET.get('ec_src', None)
+    if 'ec_src' not in request.session and request.GET.get('ec_src', False):
+        request.session['ec_src'] = request.GET['ec_src']
 
     # Retrieve the form descriptions from the user API
     form_descriptions = _get_form_descriptions(request)
