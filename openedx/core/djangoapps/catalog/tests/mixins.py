@@ -1,7 +1,9 @@
 """Mixins to help test catalog integration."""
 import json
 import urllib
+
 import httpretty
+
 from openedx.core.djangoapps.catalog.models import CatalogIntegration
 
 
@@ -41,14 +43,3 @@ class CatalogIntegrationMixin(object):
             content_type='application/json',
             status=200
         )
-
-    def minimum_catalog_course_run_object(self, course_key, has_marketing_url=True):
-        """
-        Returns catalog course run object with minimum fields.
-        """
-        return {
-            "key": course_key,
-            "marketing_url": ("https://marketing-url/course/course-title-{}".format(course_key)
-                              if has_marketing_url else None),
-            "test_key": "test_value",
-        }

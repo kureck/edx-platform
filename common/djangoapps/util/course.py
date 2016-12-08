@@ -2,6 +2,7 @@
 Utility methods related to course
 """
 import logging
+
 from django.conf import settings
 
 from openedx.core.djangoapps.catalog.utils import get_run_marketing_url

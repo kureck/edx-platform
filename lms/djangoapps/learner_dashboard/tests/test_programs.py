@@ -12,12 +12,14 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.test import override_settings
 from django.utils.text import slugify
+
 from edx_oauth2_provider.tests.factories import ClientFactory
 import httpretty
 import mock
 from provider.constants import CONFIDENTIAL
-from openedx.core.djangoapps.catalog.tests.mixins import CatalogIntegrationMixin
 
+from openedx.core.djangoapps.catalog.tests import factories as catalog_factories
+from openedx.core.djangoapps.catalog.tests.mixins import CatalogIntegrationMixin
 from openedx.core.djangoapps.credentials.models import CredentialsApiConfig
 from openedx.core.djangoapps.credentials.tests import factories as credentials_factories
 from openedx.core.djangoapps.credentials.tests.mixins import CredentialsApiConfigMixin
@@ -280,15 +282,17 @@ class TestProgramDetails(ProgramsApiConfigMixin, SharedModuleStoreTestCase, Cata
 
         ClientFactory(name=ProgramsApiConfig.OAUTH2_CLIENT_NAME, client_type=CONFIDENTIAL)
 
-        cls.course = CourseFactory()
+        course = CourseFactory()
+        cls.course_id_string = unicode(course.id)  # pylint: disable=no-member
         organization = programs_factories.Organization()
-        run_mode = programs_factories.RunMode(course_key=unicode(cls.course.id))  # pylint: disable=no-member
+        run_mode = programs_factories.RunMode(course_key=unicode(course.id))  # pylint: disable=no-member
         course_code = programs_factories.CourseCode(run_modes=[run_mode])
 
         cls.data = programs_factories.Program(
             organizations=[organization],
             course_codes=[course_code]
         )
+        cls.course_run = catalog_factories.CourseRun(key=cls.course_id_string)
 
     def setUp(self):
         super(TestProgramDetails, self).setUp()
@@ -340,9 +344,8 @@ class TestProgramDetails(ProgramsApiConfigMixin, SharedModuleStoreTestCase, Cata
         """
         Verify that login is required to access the page.
         """
-        course_id = unicode(self.course.id)  # pylint: disable=no-member
         with mock.patch('openedx.core.djangoapps.catalog.utils.get_course_runs', return_value={
-            course_id: self.minimum_catalog_course_run_object(course_id),
+            self.course_id_string: self.course_run,
         }):
             self.create_programs_config()
             self.mock_programs_api(self.data)

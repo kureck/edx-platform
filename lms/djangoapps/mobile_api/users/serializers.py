@@ -2,13 +2,14 @@
 Serializer for user API
 """
 from django.conf import settings
+
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
 from courseware.access import has_access
+from certificates.api import certificate_downloadable_status
 from openedx.core.djangoapps.catalog.utils import get_course_runs
 from student.models import CourseEnrollment, User
-from certificates.api import certificate_downloadable_status
 from util.course import get_link_for_about_page
 
 
