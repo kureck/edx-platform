@@ -3,9 +3,9 @@
 (function(AjaxPrefix) {
     'use strict';
     define(['domReady', 'jquery', 'underscore.string', 'backbone', 'gettext',
-            'common/js/components/views/feedback_notification', 'js/src/logger',
-            'coffee/src/ajax_prefix', 'jquery.cookie'],
-    function(domReady, $, str, Backbone, gettext, NotificationView, Logger) {
+            'common/js/components/views/feedback_notification', 'coffee/src/ajax_prefix',
+            'jquery.cookie'],
+    function(domReady, $, str, Backbone, gettext, NotificationView) {
         var main;
         main = function() {
             AjaxPrefix.addAjaxPrefix(jQuery, function() {
@@ -38,11 +38,11 @@
                     'title': gettext("Studio's having trouble saving your work"),
                     'message': message
                 });
-                Logger.log('edx.studio.ajax_error', {
+                console.log('Studio AJAX Error', {
                     url: event.currentTarget.URL,
                     response: jqXHR.responseText,
                     status: jqXHR.status
-                }, null, {notifyOnError: false});
+                });
                 return msg.show();
             });
             $.postJSON = function(url, data, callback) {

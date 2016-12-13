@@ -51,8 +51,7 @@
             'URI': 'xmodule_js/common_static/js/vendor/URI.min',
             mathjax: '//cdn.mathjax.org/mathjax/2.7-latest/MathJax.js?config=TeX-MML-AM_SVG&delayStartupUntil=configured',   // eslint-disable-line max-len
             'youtube': '//www.youtube.com/player_api?noext',
-            'coffee/src/ajax_prefix': 'xmodule_js/common_static/coffee/src/ajax_prefix',
-            'js/src/logger': 'xmodule_js/common_static/js/src/logger'
+            'coffee/src/ajax_prefix': 'xmodule_js/common_static/coffee/src/ajax_prefix'
         },
         shim: {
             'gettext': {
@@ -177,14 +176,10 @@
                 deps: ['xblock/core']
             },
             'cms/js/main': {
-                deps: ['coffee/src/ajax_prefix', 'js/src/logger']
+                deps: ['coffee/src/ajax_prefix']
             },
             'coffee/src/ajax_prefix': {
                 deps: ['jquery']
-            },
-            'js/src/logger': {
-                exports: 'Logger',
-                deps: ['coffee/src/ajax_prefix']
             }
         }
     });
