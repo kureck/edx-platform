@@ -285,9 +285,6 @@ FEATURES = {
     # Organizations application flag
     'ORGANIZATIONS_APP': False,
 
-    # Enterprise application flag
-    'ENTERPRISE_APP': False,
-
     # Prerequisite courses feature flag
     'ENABLE_PREREQUISITE_COURSES': False,
 
