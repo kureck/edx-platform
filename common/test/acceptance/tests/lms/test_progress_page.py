@@ -225,7 +225,7 @@ class PersistentGradesTest(ProgressPageBaseTest):
         _change_subsection_structure,
         _change_weight_for_problem
     )
-    @flaky.flaky(max_runs=10, min_passes=9)  # TNL-6040
+    @flaky.flaky(max_runs=5, min_passes=4)  # TNL-6040
     def test_content_changes_do_not_change_score(self, edit):
         with self._logged_in_session():
             self.courseware_page.visit()
