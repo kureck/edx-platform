@@ -128,27 +128,32 @@ def get_enterprise_customer_logo_url(request):
     """
     Client API operation adapter/wrapper
     """
-    logo_url = None
 
     if not enterprise_enabled():
         return None
 
     parameter = get_enterprise_branding_filter_param(request)
-    if parameter:
-        provider_id = parameter.get('provider_id', None)
-        ec_uuid = parameter.get('ec_uuid', None)
+    if not parameter:
+        return None
 
-        branding_info = enterprise_api.get_enterprise_branding_info(provider_id=provider_id, ec_uuid=ec_uuid)
-        if branding_info and branding_info.logo:
-            logo_url = branding_info.logo.url
+    provider_id = parameter.get('provider_id', None)
+    ec_uuid = parameter.get('ec_uuid', None)
+
+    if provider_id:
+        branding_info = enterprise_api.get_enterprise_branding_info_by_provider_id(provider_id=provider_id)
+    elif ec_uuid:
+        branding_info = enterprise_api.get_enterprise_branding_info_by_ec_uuid(ec_uuid=ec_uuid)
+
+    logo_url = None
+    if branding_info and branding_info.logo:
+        logo_url = branding_info.logo.url
 
     return logo_url
 
 
 def set_enterprise_branding_filter_param(request, provider_id):
     """
-    setting 'EC_BRANDING_FILTER_PARAM' in session.
-    'EC_BRANDING_FILTER_PARAM' either be provider_id or ec_uuid
+    Setting 'EC_BRANDING_FILTER_PARAM' in session. 'EC_BRANDING_FILTER_PARAM' either be provider_id or ec_uuid.
     e.g. {provider_id: 'xyz'} or {ec_src: enterprise_customer_uuid}
     """
 
@@ -165,7 +170,7 @@ def set_enterprise_branding_filter_param(request, provider_id):
 
 def get_enterprise_branding_filter_param(request):
     """
-    :return Filter parameters from session for enterprise customer branding information.
+    :return Filter parameter from session for enterprise customer branding information.
 
     """
     return request.session.get(EC_BRANDING_FILTER_PARAM, None)
