@@ -38,7 +38,7 @@
                     'title': gettext("Studio's having trouble saving your work"),
                     'message': message
                 });
-                console.log('Studio AJAX Error', {
+                console.log('Studio AJAX Error', { // eslint-disable-line no-console
                     url: event.currentTarget.URL,
                     response: jqXHR.responseText,
                     status: jqXHR.status
