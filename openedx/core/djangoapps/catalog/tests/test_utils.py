@@ -5,7 +5,6 @@ import uuid
 
 from django.core.cache import cache
 from django.test import TestCase
-
 import httpretty
 import mock
 from opaque_keys.edx.keys import CourseKey
@@ -181,6 +180,10 @@ class TestGetCourseRun(mixins.CatalogIntegrationMixin, CacheIsolationTestCase):
             cache_ttl=1,
         )
         self.course_runs = [factories.CourseRun() for __ in range(4)]
+        self.course_key_1 = CourseKey.from_string(self.course_runs[0]["key"])
+        self.course_key_2 = CourseKey.from_string(self.course_runs[1]["key"])
+        self.course_key_3 = CourseKey.from_string(self.course_runs[2]["key"])
+        self.course_key_4 = CourseKey.from_string(self.course_runs[3]["key"])
 
     def test_config_missing(self):
         """
@@ -188,24 +191,26 @@ class TestGetCourseRun(mixins.CatalogIntegrationMixin, CacheIsolationTestCase):
         """
         CatalogIntegration.objects.all().delete()
 
-        data = utils.get_course_runs(self.user, [])
+        data = utils.get_course_runs([], self.user)
         self.assertEqual(data, {})
 
     def test_get_course_run(self):
-        course_keys = [self.course_runs[0]["key"]]
-        self.register_catalog_course_run_response(course_keys, [self.course_runs[0]])
+        course_keys = [self.course_key_1]
+        course_key_strings = [self.course_runs[0]["key"]]
+        self.register_catalog_course_run_response(course_key_strings, [self.course_runs[0]])
 
-        course_catalog_data_dict = utils.get_course_runs(self.user, course_keys)
+        course_catalog_data_dict = utils.get_course_runs(course_keys, self.user)
         expected_data = {self.course_runs[0]["key"]: self.course_runs[0]}
         self.assertEqual(expected_data, course_catalog_data_dict)
 
     def test_get_multiple_course_run(self):
-        course_keys = [self.course_runs[0]["key"], self.course_runs[1]["key"], self.course_runs[2]["key"]]
+        course_key_strings = [self.course_runs[0]["key"], self.course_runs[1]["key"], self.course_runs[2]["key"]]
+        course_keys = [self.course_key_1, self.course_key_2, self.course_key_3]
         self.register_catalog_course_run_response(
-            course_keys, [self.course_runs[0], self.course_runs[1], self.course_runs[2]]
+            course_key_strings, [self.course_runs[0], self.course_runs[1], self.course_runs[2]]
         )
 
-        course_catalog_data_dict = utils.get_course_runs(self.user, course_keys)
+        course_catalog_data_dict = utils.get_course_runs(course_keys, self.user)
         expected_data = {
             self.course_runs[0]["key"]: self.course_runs[0],
             self.course_runs[1]["key"]: self.course_runs[1],
@@ -214,32 +219,34 @@ class TestGetCourseRun(mixins.CatalogIntegrationMixin, CacheIsolationTestCase):
         self.assertEqual(expected_data, course_catalog_data_dict)
 
     def test_course_run_unavailable(self):
-        course_keys = [self.course_runs[0]["key"], self.course_runs[3]["key"]]
-        self.register_catalog_course_run_response(course_keys, [self.course_runs[0]])
+        course_key_strings = [self.course_runs[0]["key"], self.course_runs[3]["key"]]
+        course_keys = [self.course_key_1, self.course_key_4]
+        self.register_catalog_course_run_response(course_key_strings, [self.course_runs[0]])
 
-        course_catalog_data_dict = utils.get_course_runs(self.user, course_keys)
+        course_catalog_data_dict = utils.get_course_runs(course_keys, self.user)
         expected_data = {self.course_runs[0]["key"]: self.course_runs[0]}
         self.assertEqual(expected_data, course_catalog_data_dict)
 
     def test_cached_course_run_data(self):
-        course_keys = [self.course_runs[0]["key"], self.course_runs[1]["key"]]
+        course_key_strings = [self.course_runs[0]["key"], self.course_runs[1]["key"]]
+        course_keys = [self.course_key_1, self.course_key_2]
         course_cached_keys = [
             "{}{}".format(utils.CatalogCacheUtility.CACHE_KEY_PREFIX, self.course_runs[0]["key"]),
             "{}{}".format(utils.CatalogCacheUtility.CACHE_KEY_PREFIX, self.course_runs[1]["key"]),
         ]
-        self.register_catalog_course_run_response(course_keys, [self.course_runs[0], self.course_runs[1]])
+        self.register_catalog_course_run_response(course_key_strings, [self.course_runs[0], self.course_runs[1]])
         expected_data = {
             self.course_runs[0]["key"]: self.course_runs[0],
             self.course_runs[1]["key"]: self.course_runs[1],
         }
 
-        course_catalog_data_dict = utils.get_course_runs(self.user, course_keys)
+        course_catalog_data_dict = utils.get_course_runs(course_keys, self.user)
         self.assertEqual(expected_data, course_catalog_data_dict)
         cached_data = cache.get_many(course_cached_keys)
         self.assertEqual(set(course_cached_keys), set(cached_data.keys()))
 
         with mock.patch('openedx.core.djangoapps.catalog.utils.get_edx_api_data') as mock_method:
-            course_catalog_data_dict = utils.get_course_runs(self.user, course_keys)
+            course_catalog_data_dict = utils.get_course_runs(course_keys, self.user)
             self.assertEqual(0, mock_method.call_count)
             self.assertEqual(expected_data, course_catalog_data_dict)
 
@@ -252,20 +259,21 @@ class TestGetRunMarketingUrl(TestCase, mixins.CatalogIntegrationMixin):
         super(TestGetRunMarketingUrl, self).setUp()
         self.user = UserFactory()
         self.course_runs = [factories.CourseRun() for __ in range(2)]
+        self.course_key_1 = CourseKey.from_string(self.course_runs[0]["key"])
 
     def test_get_run_marketing_url(self):
         with mock.patch('openedx.core.djangoapps.catalog.utils.get_course_runs', return_value={
             self.course_runs[0]["key"]: self.course_runs[0],
             self.course_runs[1]["key"]: self.course_runs[1],
         }):
-            course_marketing_url = utils.get_run_marketing_url(self.user, self.course_runs[0]["key"])
+            course_marketing_url = utils.get_run_marketing_url(self.course_key_1, self.user)
             self.assertEqual(self.course_runs[0]["marketing_url"], course_marketing_url)
 
     def test_marketing_url_catalog_course_run_not_found(self):
         with mock.patch('openedx.core.djangoapps.catalog.utils.get_course_runs', return_value={
             self.course_runs[0]["key"]: self.course_runs[0],
         }):
-            course_marketing_url = utils.get_run_marketing_url(self.user, self.course_runs[0]["key"])
+            course_marketing_url = utils.get_run_marketing_url(self.course_key_1, self.user)
             self.assertEqual(self.course_runs[0]["marketing_url"], course_marketing_url)
 
     def test_marketing_url_missing(self):
@@ -274,7 +282,7 @@ class TestGetRunMarketingUrl(TestCase, mixins.CatalogIntegrationMixin):
             self.course_runs[0]["key"]: self.course_runs[0],
             self.course_runs[1]["key"]: self.course_runs[1],
         }):
-            course_marketing_url = utils.get_run_marketing_url(self.user, "foo2/bar2/baz2")
+            course_marketing_url = utils.get_run_marketing_url(CourseKey.from_string("foo2/bar2/baz2"), self.user)
             self.assertEqual(None, course_marketing_url)
 
 
@@ -286,7 +294,10 @@ class TestGetRunMarketingUrls(TestCase, mixins.CatalogIntegrationMixin):
         super(TestGetRunMarketingUrls, self).setUp()
         self.user = UserFactory()
         self.course_runs = [factories.CourseRun() for __ in range(2)]
-        self.course_keys = [self.course_runs[0]["key"], self.course_runs[1]["key"]]
+        self.course_keys = [
+            CourseKey.from_string(self.course_runs[0]["key"]),
+            CourseKey.from_string(self.course_runs[1]["key"]),
+        ]
 
     def test_get_run_marketing_url(self):
         expected_data = {
@@ -297,7 +308,7 @@ class TestGetRunMarketingUrls(TestCase, mixins.CatalogIntegrationMixin):
             self.course_runs[0]["key"]: self.course_runs[0],
             self.course_runs[1]["key"]: self.course_runs[1],
         }):
-            course_marketing_url_dict = utils.get_run_marketing_urls(self.user, self.course_keys)
+            course_marketing_url_dict = utils.get_run_marketing_urls(self.course_keys, self.user)
             self.assertEqual(expected_data, course_marketing_url_dict)
 
     def test_marketing_url_catalog_course_run_not_found(self):
@@ -307,7 +318,7 @@ class TestGetRunMarketingUrls(TestCase, mixins.CatalogIntegrationMixin):
         with mock.patch('openedx.core.djangoapps.catalog.utils.get_course_runs', return_value={
             self.course_runs[0]["key"]: self.course_runs[0],
         }):
-            course_marketing_url_dict = utils.get_run_marketing_urls(self.user, self.course_keys)
+            course_marketing_url_dict = utils.get_run_marketing_urls(self.course_keys, self.user)
             self.assertEqual(expected_data, course_marketing_url_dict)
 
     def test_marketing_url_missing(self):
@@ -320,5 +331,5 @@ class TestGetRunMarketingUrls(TestCase, mixins.CatalogIntegrationMixin):
             self.course_runs[0]["key"]: self.course_runs[0],
             self.course_runs[1]["key"]: self.course_runs[1],
         }):
-            course_marketing_url_dict = utils.get_run_marketing_urls(self.user, self.course_keys)
+            course_marketing_url_dict = utils.get_run_marketing_urls(self.course_keys, self.user)
             self.assertEqual(expected_data, course_marketing_url_dict)

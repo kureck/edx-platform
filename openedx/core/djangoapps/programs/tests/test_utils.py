@@ -5,6 +5,7 @@ import json
 from unittest import skipUnless
 import uuid
 
+import ddt
 from django.conf import settings
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
@@ -12,13 +13,11 @@ from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone
 from django.utils.text import slugify
-
-import ddt
+from edx_oauth2_provider.tests.factories import ClientFactory
 import httpretty
 import mock
 from nose.plugins.attrib import attr
 from opaque_keys.edx.keys import CourseKey
-from edx_oauth2_provider.tests.factories import ClientFactory
 from provider.constants import CONFIDENTIAL
 
 from lms.djangoapps.certificates.api import MODES

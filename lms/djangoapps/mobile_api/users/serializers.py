@@ -1,14 +1,10 @@
 """
 Serializer for user API
 """
-from django.conf import settings
-
 from rest_framework import serializers
 from rest_framework.reverse import reverse
-
 from courseware.access import has_access
 from certificates.api import certificate_downloadable_status
-from openedx.core.djangoapps.catalog.utils import get_course_runs
 from student.models import CourseEnrollment, User
 from util.course import get_link_for_about_page
 
@@ -54,7 +50,9 @@ class CourseOverviewField(serializers.RelatedField):
                 }
             },
             'course_image': course_overview.course_image_url,
-            'course_about': get_link_for_about_page(course_id, request.user, self.context.get('catalog_course_run')),
+            'course_about': get_link_for_about_page(
+                course_overview.id, request.user, self.context.get('catalog_course_run')
+            ),
             'course_updates': reverse(
                 'course-updates-list',
                 kwargs={'course_id': course_id},
@@ -85,15 +83,6 @@ class CourseEnrollmentSerializer(serializers.ModelSerializer):
     """
     course = CourseOverviewField(source="course_overview", read_only=True)
     certificate = serializers.SerializerMethodField()
-
-    @classmethod
-    def get_catalog_course_runs(cls, user, course_keys):
-        """
-        Returns catalog runs against courses if marketing site is enabled.
-        """
-        if settings.FEATURES.get('ENABLE_MKTG_SITE'):
-            return get_course_runs(user, course_keys)
-        return {}
 
     def get_certificate(self, model):
         """

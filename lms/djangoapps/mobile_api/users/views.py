@@ -18,6 +18,7 @@ from courseware.model_data import FieldDataCache
 from courseware.module_render import get_module_for_descriptor
 from courseware.views.index import save_positions_recursively_up
 from courseware.views.views import get_current_child
+from openedx.core.djangoapps.catalog.utils import get_course_runs
 from student.models import CourseEnrollment, User
 
 from xblock.fields import Scope
@@ -272,9 +273,7 @@ class UserCourseEnrollmentsList(APIView):
         """
         queryset = CourseEnrollment.objects.all()
         course_ids = set(queryset.values_list('course_id', flat=True))
-        catalog_course_runs_against_course_keys = CourseEnrollmentSerializer.get_catalog_course_runs(
-            request.user, course_ids
-        )
+        catalog_course_runs_against_course_keys = get_course_runs(course_ids, request.user)
 
         enrollments = queryset.filter(
             user__username=username,

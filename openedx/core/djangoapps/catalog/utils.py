@@ -120,7 +120,7 @@ def munge_catalog_program(catalog_program):
     }
 
 
-def get_and_cache_course_runs(user, course_keys):
+def get_and_cache_course_runs(course_keys, user):
     """
     Get course run's data from the course catalog service and cache it.
     """
@@ -143,12 +143,12 @@ def get_and_cache_course_runs(user, course_keys):
     return catalog_course_runs_against_course_keys
 
 
-def get_course_runs(user, course_keys):
+def get_course_runs(course_keys, user):
     """
     Get course run data from the course catalog service if not available in cache.
 
     Arguments:
-        course_keys ([String]): A list of Course key strings identifying the run whose data we want.
+        course_keys ([CourseKey]): A list of Course key object identifying the run whose data we want.
         user (User): The user to authenticate as when making requests to the catalog service.
 
     Returns:
@@ -162,52 +162,54 @@ def get_course_runs(user, course_keys):
             course_keys, catalog_course_runs_against_course_keys.keys()
         )
         catalog_course_runs_against_course_keys.update(
-            get_and_cache_course_runs(user, missing_course_keys)
+            get_and_cache_course_runs(missing_course_keys, user)
         )
 
     return catalog_course_runs_against_course_keys
 
 
-def get_run_marketing_url(user, course_key):
+def get_run_marketing_url(course_key, user):
     """
     Get a course run's marketing URL from the course catalog service.
 
     Arguments:
-          course_key (String): Course key string identifying the run whose marketing URL we want.
+        course_key (CourseKey): Course key object identifying the run whose marketing URL we want.
+        user (User): The user to authenticate as when making requests to the catalog service.
 
     Returns:
-          string, the marketing URL, or None if no URL is available.
+        string, the marketing URL, or None if no URL is available.
     """
-    course_marketing_urls = get_run_marketing_urls(user, [course_key])
-    return course_marketing_urls.get(course_key)
+    course_marketing_urls = get_run_marketing_urls([course_key], user)
+    return course_marketing_urls.get(unicode(course_key))
 
 
-def get_run_marketing_urls(user, course_keys):
+def get_run_marketing_urls(course_keys, user):
     """
     Get course run marketing URLs from the course catalog service against course keys.
 
     Arguments:
-        course_keys ([String]): A list of Course key strings identifying the run whose data we want.
+        course_keys ([CourseKey]): A list of Course key object identifying the run whose data we want.
         user (User): The user to authenticate as when making requests to the catalog service.
 
     Returns:
         dict of run marketing URLs against course keys
     """
     course_marketing_urls = {}
-    course_catalog_dict = get_course_runs(user, course_keys)
+    course_catalog_dict = get_course_runs(course_keys, user)
     if not course_catalog_dict:
         return course_marketing_urls
 
     for course_key in course_keys:
-        if course_key in course_catalog_dict:
-            course_marketing_urls[course_key] = course_catalog_dict[course_key].get('marketing_url')
+        course_key_string = unicode(course_key)
+        if course_key_string in course_catalog_dict:
+            course_marketing_urls[course_key_string] = course_catalog_dict[course_key_string].get('marketing_url')
 
     return course_marketing_urls
 
 
 class CatalogCacheUtility(object):
     """
-    Non-instantiatable Class that contains all utility methods for Catalog Cache.
+    Non-instantiatable class housing utility methods for caching catalog API data.
     """
     __metaclass__ = abc.ABCMeta
     CACHE_KEY_PREFIX = "catalog.course_runs."
@@ -216,9 +218,20 @@ class CatalogCacheUtility(object):
     def get_course_keys_not_found_in_cache(cls, course_keys, cached_course_run_keys):
         """
         Get course key strings for which course run data is not available in cache.
+
+        Arguments:
+            course_key (CourseKey): CourseKey object to create corresponding catalog cache key.
+
+        Returns:
+            list of string rep of course keys not found in catalog cache.
         """
-        missing_course_keys = list(set(course_keys) - set(cached_course_run_keys))
-        log.info("Catalog course run data not found in cache against Course Keys: '{}'".format(
+        missing_course_keys = []
+        for course_key in course_keys:
+            course_key_string = unicode(course_key)
+            if course_key_string not in cached_course_run_keys:
+                missing_course_keys.append(course_key_string)
+
+        log.info("Cached catalog course run data missing for: '{}'".format(
             ", ".join(missing_course_keys)
         ))
         return missing_course_keys
@@ -226,7 +239,13 @@ class CatalogCacheUtility(object):
     @classmethod
     def get_cached_catalog_course_runs(cls, course_keys):
         """
-        Get course runs from cache against course keys
+        Get course runs from cache against course keys.
+
+        Arguments:
+            course_keys ([CourseKey]): List of CourseKey object identifying the run whose data we want.
+
+        Returns:
+            dict of catalog course run against course key string
         """
         course_catalog_run_cache_keys = [
             cls._get_cache_key_name(course_key)
@@ -253,8 +272,14 @@ class CatalogCacheUtility(object):
     def _get_cache_key_name(cls, course_key):
         """
         Returns key name to use to cache catalog course run data for course key.
+
+        Arguments:
+            course_key (CourseKey): CourseKey object to create corresponding catalog cache key.
+
+        Returns:
+            string, catalog cache key against course key.
         """
-        return "{}{}".format(cls.CACHE_KEY_PREFIX, course_key)
+        return "{}{}".format(cls.CACHE_KEY_PREFIX, unicode(course_key))
 
     @classmethod
     def _extract_course_key_from_cache_key_name(cls, catalog_course_run_cache_key):

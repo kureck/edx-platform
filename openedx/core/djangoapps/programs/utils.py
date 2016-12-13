@@ -17,7 +17,8 @@ from lms.djangoapps.commerce.utils import EcommerceService
 from openedx.core.djangoapps.catalog.utils import (
     get_programs as get_catalog_programs,
     munge_catalog_program,
-    get_run_marketing_url)
+    get_run_marketing_url,
+)
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from openedx.core.djangoapps.programs.models import ProgramsApiConfig
 from openedx.core.lib.edx_api_utils import get_edx_api_data
@@ -399,7 +400,7 @@ class ProgramDataExtender(object):
         run_mode['is_enrollment_open'] = self.enrollment_start <= timezone.now() < enrollment_end
 
     def _attach_run_mode_marketing_url(self, run_mode):
-        run_mode['marketing_url'] = get_run_marketing_url(self.user, unicode(self.course_key))
+        run_mode['marketing_url'] = get_run_marketing_url(self.course_key, self.user)
 
     def _attach_run_mode_start_date(self, run_mode):
         run_mode['start_date'] = self.course_overview.start_datetime_text()

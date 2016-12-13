@@ -30,6 +30,7 @@ from course_modes.models import CourseMode
 from lms.djangoapps.grades.tests.utils import mock_passing_grade
 from openedx.core.djangoapps.catalog.tests import factories
 from openedx.core.djangoapps.catalog.tests.mixins import CatalogIntegrationMixin
+from openedx.core.djangoapps.catalog.utils import get_course_runs
 from openedx.core.lib.courses import course_image_url
 from student.models import CourseEnrollment
 from util.milestones_helpers import set_prerequisite_courses
@@ -509,9 +510,10 @@ class TestCourseEnrollmentSerializer(MobileAPITestCase, MilestonesTestCaseMixin,
     @mock.patch.dict('django.conf.settings.FEATURES', {'ENABLE_MKTG_SITE': True})
     def test_course_about_marketing_url(self):
         self.register_catalog_course_run_response(self.course_keys, [self.course_run])
-        catalog_course_runs_against_course_keys = CourseEnrollmentSerializer.get_catalog_course_runs(
-            self.request.user, self.course_keys
-        )
+        # catalog_course_runs_against_course_keys = CourseEnrollmentSerializer.get_catalog_course_runs(
+        #     self.request.user, self.course_keys
+        # )
+        catalog_course_runs_against_course_keys = get_course_runs(self.course_keys, self.request.user)
         enrollment = CourseEnrollment.enrollments_for_user(self.user)[0]
         serialized = CourseEnrollmentSerializer(
             enrollment,
@@ -530,9 +532,7 @@ class TestCourseEnrollmentSerializer(MobileAPITestCase, MilestonesTestCaseMixin,
     @mock.patch.dict('django.conf.settings.FEATURES', {'ENABLE_MKTG_SITE': False})
     def test_course_about_lms_url(self):
         self.register_catalog_course_run_response(self.course_keys, [self.course_run])
-        catalog_course_runs_against_course_keys = CourseEnrollmentSerializer.get_catalog_course_runs(
-            self.request.user, self.course_keys
-        )
+        catalog_course_runs_against_course_keys = get_course_runs(self.course_keys, self.request.user)
         enrollment = CourseEnrollment.enrollments_for_user(self.user)[0]
         serialized = CourseEnrollmentSerializer(
             enrollment,

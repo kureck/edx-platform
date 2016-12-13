@@ -2,9 +2,9 @@
 Tests for course utils.
 """
 from django.core.cache import cache
-
 import httpretty
 import mock
+from opaque_keys.edx.keys import CourseKey
 
 from openedx.core.djangoapps.catalog.tests import factories
 from openedx.core.djangoapps.catalog.utils import CatalogCacheUtility
@@ -25,15 +25,17 @@ class CourseAboutLinkTestCase(CatalogIntegrationMixin, CacheIsolationTestCase):
     def setUp(self):
         super(CourseAboutLinkTestCase, self).setUp()
         self.user = UserFactory.create(password="password")
-        self.course_key = "foo/bar/baz"
-        self.course_run = factories.CourseRun(key=self.course_key)
+
+        self.course_key_string = "foo/bar/baz"
+        self.course_key = CourseKey.from_string("foo/bar/baz")
+        self.course_run = factories.CourseRun(key=self.course_key_string)
         self.lms_course_about_url = "http://localhost:8000/courses/foo/bar/baz/about"
 
         self.catalog_integration = self.create_catalog_integration(
             internal_api_url="http://catalog.example.com:443/api/v1",
             cache_ttl=1
         )
-        self.course_cache_key = "{}{}".format(CatalogCacheUtility.CACHE_KEY_PREFIX, self.course_key)
+        self.course_cache_key = "{}{}".format(CatalogCacheUtility.CACHE_KEY_PREFIX, self.course_key_string)
 
     def test_about_page_lms(self):
         """
@@ -45,7 +47,7 @@ class CourseAboutLinkTestCase(CatalogIntegrationMixin, CacheIsolationTestCase):
             )
         with mock.patch.dict('django.conf.settings.FEATURES', {'ENABLE_MKTG_SITE': True}):
             self.register_catalog_course_run_response(
-                [self.course_key], [{"key": self.course_key, "marketing_url": None}]
+                [self.course_key_string], [{"key": self.course_key_string, "marketing_url": None}]
             )
             self.assertEquals(get_link_for_about_page(self.course_key, self.user), self.lms_course_about_url)
 
@@ -54,7 +56,7 @@ class CourseAboutLinkTestCase(CatalogIntegrationMixin, CacheIsolationTestCase):
         """
         Get URL for about page, marketing site enabled.
         """
-        self.register_catalog_course_run_response([self.course_key], [self.course_run])
+        self.register_catalog_course_run_response([self.course_key_string], [self.course_run])
         self.assertEquals(get_link_for_about_page(self.course_key, self.user), self.course_run["marketing_url"])
         cached_data = cache.get_many([self.course_cache_key])
         self.assertIn(self.course_cache_key, cached_data.keys())

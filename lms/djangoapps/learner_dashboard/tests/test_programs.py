@@ -12,7 +12,6 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.test import override_settings
 from django.utils.text import slugify
-
 from edx_oauth2_provider.tests.factories import ClientFactory
 import httpretty
 import mock
