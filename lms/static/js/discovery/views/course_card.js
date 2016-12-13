@@ -16,6 +16,7 @@
                 timezone: userTimezone,
                 format: DateUtils.dateFormatEnum.shortDate
             };
+            console.log(context);
             return DateUtils.localize(context);
         }
 
