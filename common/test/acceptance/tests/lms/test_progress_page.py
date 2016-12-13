@@ -143,6 +143,7 @@ class PersistentGradesTest(ProgressPageBaseTest):
         subsection.expand_subsection()
         subsection.add_unit()
         subsection.publish()
+        subsection.wait_for_ajax()
 
     def _set_staff_lock_on_subsection(self, locked):
         """
