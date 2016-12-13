@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 from django.test import TestCase
 
 import mock
-from branding.api import get_logo_url, get_footer, get_enterprise_customer_logo_url
+from branding.api import get_logo_url, get_footer
 from django.test.utils import override_settings
 
 
@@ -23,24 +23,6 @@ class TestHeader(TestCase):
             logo_url = get_logo_url()
 
         self.assertEqual(logo_url, cdn_url)
-
-    @mock.patch.dict('django.conf.settings.FEATURES', {'ENTERPRISE_APP': True})
-    def test_enterprise_customer_logo_url(self):
-        """
-        Test: branding logo url path for enterprise customer.
-        """
-        branding_info = mock.Mock(
-            logo=mock.Mock(
-                url='/test/image.png'
-            )
-        )
-        with mock.patch('enterprise.api.get_enterprise_branding_info', return_value=branding_info):
-            logo_url = get_enterprise_customer_logo_url()
-            self.assertEqual(logo_url, '/test/image.png')
-
-        with mock.patch('enterprise.api.get_enterprise_branding_info', return_value=None):
-            logo_url = get_enterprise_customer_logo_url()
-            self.assertEqual(logo_url, None)
 
 
 class TestFooter(TestCase):

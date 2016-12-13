@@ -22,7 +22,6 @@ from django.contrib.staticfiles.storage import staticfiles_storage
 from edxmako.shortcuts import marketing_link
 from branding.models import BrandingApiConfig
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
-from util.enterprise_helpers import get_enterprise_branding_info
 
 
 log = logging.getLogger("edx.footer")
@@ -370,19 +369,6 @@ def get_base_url(is_secure):
         is_secure (bool): If true, use HTTPS as the protocol.
     """
     return _absolute_url(is_secure=is_secure, url_path="")
-
-
-def get_enterprise_customer_logo_url(**kwargs):
-    """
-    Return the url for the enterprise customer branding logo image
-
-    Arguments:
-        provider_id: There is 1:1 relation between Enterprise customer and SAML identity provider.
-    """
-    branding_info = get_enterprise_branding_info(**kwargs)
-    if branding_info:
-        return branding_info.logo.url
-    return None
 
 
 def get_logo_url(is_secure=True):
