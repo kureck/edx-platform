@@ -289,9 +289,8 @@ class VideoComponentPage(VideoPage):
 
         """
         caption_line_selector = ".subtitles li span[data-index='{index}']".format(index=line_number - 1)
-        attributes = self.q(css=caption_line_selector).attrs('class')
-
-        return 'focused' in attributes
+        caption_container = self.q(css=caption_line_selector).results[0].find_element_by_xpath('..')
+        return 'focused' in caption_container.get_attribute('class').split()
 
     @property
     def is_slider_range_visible(self):
