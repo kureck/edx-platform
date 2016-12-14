@@ -3,6 +3,7 @@ Helpers to access the enterprise app
 """
 from django.conf import settings
 from django.utils.translation import ugettext as _
+import logging
 
 try:
     from enterprise.models import EnterpriseCustomer
@@ -17,7 +18,8 @@ except ImportError:
     pass
 
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
-EC_BRANDING_FILTER_PARAM = 'branding_param'
+EC_BRANDING_FILTER_PARAM = 'ec_branding_filter_param'
+log = logging.getLogger("edx.enterprise_helpers")
 
 
 def enterprise_enabled():
@@ -156,16 +158,23 @@ def set_enterprise_branding_filter_param(request, provider_id):
     Setting 'EC_BRANDING_FILTER_PARAM' in session. 'EC_BRANDING_FILTER_PARAM' either be provider_id or ec_uuid.
     e.g. {provider_id: 'xyz'} or {ec_src: enterprise_customer_uuid}
     """
+    ec_uuid = request.GET.get('ec_src', None)
+    if EC_BRANDING_FILTER_PARAM in request.session and (provider_id or ec_uuid):
+        # It can be possible that the session key 'ec_branding_filter_param' is pre-populated with 'ec_uuid' but at
+        # some point the 'provider_id' is given OR may be it is pre-populated with 'provider_id' but later at the point
+        # 'ec_uuid' is given. So before setting it, remove the previous one.
+        log.info("Deleting the session key 'ec_branding_filter_param'")
+        del request.session[EC_BRANDING_FILTER_PARAM]
 
-    if EC_BRANDING_FILTER_PARAM not in request.session:
-        # SSO based Enterprise customers provide SAML idp e.g. provider_id
-        if provider_id:
-            request.session[EC_BRANDING_FILTER_PARAM] = {'provider_id': provider_id}
+    if provider_id:
+        log.info("Session key 'ec_branding_filter_param' has been set with provider_id '%s'", provider_id)
+        request.session[EC_BRANDING_FILTER_PARAM] = {'provider_id': provider_id}
 
-        elif request.GET.get('ec_src', None):
-            # we are assuming that none sso based enterprise will return Enterprise Customer uuid as 'ec_src' in query
-            # param e.g. edx.org/foo/bar?ec_src=6185ed46-68a4-45d6-8367-96c0bf70d1a6
-            request.session[EC_BRANDING_FILTER_PARAM] = {'ec_uuid': request.GET['ec_src']}
+    elif ec_uuid:
+        # we are assuming that none sso based enterprise will return Enterprise Customer uuid as 'ec_src' in query
+        # param e.g. edx.org/foo/bar?ec_src=6185ed46-68a4-45d6-8367-96c0bf70d1a6
+        log.info("Session key 'ec_branding_filter_param' has been set with ec_uuid '%s'", ec_uuid)
+        request.session[EC_BRANDING_FILTER_PARAM] = {'ec_uuid': ec_uuid}
 
 
 def get_enterprise_branding_filter_param(request):
